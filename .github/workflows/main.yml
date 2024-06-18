@@ -28,6 +28,7 @@ jobs:
             --image-uri $REGISTRY/$REPOSITORY:$IMAGE_TAG
 
 
+
             
       
             
