@@ -5,14 +5,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: AKIAWRFJDIMCEXA3CDXQ
+          aws-secret-access-key: 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
           aws-region: ap-south-1
-
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -28,3 +26,5 @@ jobs:
           aws lambda update-function-code \
             --function-name Cl_Tn_En_Comments \
             --image-uri $REGISTRY/$REPOSITORY:$IMAGE_TAG
+            
+            
