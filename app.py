@@ -8,7 +8,6 @@ from langdetect import detect
 from googletrans import Translator
 from pymongo import MongoClient
 
-
 translator = Translator()
 
 # MongoDB connection setup
