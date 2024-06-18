@@ -20,7 +20,7 @@ jobs:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: coach_life
           IMAGE_TAG: ${{ github.sha }}
-        run: |
+        run: 
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
           aws lambda update-function-code \
