@@ -6,7 +6,7 @@ import pytz
 from langdetect import detect
 from googletrans import Translator
 from pymongo import MongoClient
-import os
+import os 
 
 translator = Translator()
 
