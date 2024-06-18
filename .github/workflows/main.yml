@@ -24,7 +24,7 @@ jobs:
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
           aws lambda update-function-code \
-            --function-name CL_CoachParen_Summary \
+            --function-name Cl_Tn_En_Comments \
             --image-uri $REGISTRY/$REPOSITORY:$IMAGE_TAG
       
             
