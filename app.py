@@ -1,6 +1,5 @@
 import os
 import json
-import boto3
 import openai
 from bson import ObjectId
 from datetime import datetime
@@ -97,3 +96,6 @@ def add_comment(event, context):
                 "Content-Type": "application/json"
             }
         }
+
+def lambda_handler(event, context):
+    return add_comment(event, context)
