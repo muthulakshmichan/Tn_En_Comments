@@ -35,8 +35,13 @@ def translate_text(text, src='ta', dest='en'):
 
 def add_comment(event, context):
     try:
-        # Parse input JSON data
-        data = json.loads(event['body'])
+        # Check if event['body'] is already a dictionary
+        if isinstance(event['body'], str):
+            # Parse input JSON data if it's a string
+            data = json.loads(event['body'])
+        else:
+            data = event['body']
+            
         document_id = data['document_id']
         comment = data['comment']
         commented_by = data['commented_by']
@@ -75,7 +80,11 @@ def add_comment(event, context):
         if result.matched_count == 0:
             return {
                 "statusCode": 404,
-                "body": json.dumps({"error": "No document found with the provided ID."})
+                "body": json.dumps({"error": "No document found with the provided ID."}),
+                "headers": {
+                    "Access-Control-Allow-Origin": "*",
+                    "Content-Type": "application/json"
+                }
             }
 
         return {
