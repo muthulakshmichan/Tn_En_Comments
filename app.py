@@ -19,43 +19,41 @@ prompts_collection = db['Prompts']
 # Set up the OpenAI API key
 openai.api_key = os.environ['OPENAI_API_KEY']
 
+# Function to detect language of the text
 def detect_language(text):
     try:
         return detect(text)
     except:
         return 'unknown'
 
+# Function to translate text using OpenAI API
 def translate_text(text, src='ta', dest='en'):
     try:
-        translated = translator.translate(text, src=src, dest=dest)
-        return translated.text
+        if src != 'en' and dest == 'en':
+            response = openai.ChatCompletion.create(
+                model="gpt-4-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a translation assistant that translates Tamil text to English exactly as it is without adding any additional context or interpretation."},
+                    {"role": "user", "content": f"Tamil: {text}\nTranslate to English:"}
+                ],
+                max_tokens=150,
+                temperature=0
+            )
+            translated_text = response['choices'][0]['message']['content'].strip()
+            return translated_text
+        else:
+            return text
     except Exception as e:
         print(f"Translation error: {e}")
         return text
 
-def add_comment(event, context):
+# Function to add comment to a document in the database
+def add_comment(document_id, comment, commented_by):
     try:
-        # Check if event['body'] is already a dictionary
-        if isinstance(event['body'], str):
-            # Parse input JSON data if it's a string
-            data = json.loads(event['body'])
-        else:
-            data = event['body']
-            
-        document_id = data['document_id']
-        comment = data['comment']
-        commented_by = data['commented_by']
-
-        # Ensure the document ID is a valid ObjectId
         document_id = ObjectId(document_id)
-        
-        # Detect language of the comment
         comment_language = detect_language(comment)
-
-        # Get the current UTC time with timezone aware
         now_utc = datetime.now(pytz.UTC)
 
-        # Convert UTC time to your desired timezone
         ist = pytz.timezone('Asia/Kolkata')
         commented_on = now_utc.astimezone(ist).strftime("%Y-%m-%d %H:%M:%S")
 
@@ -65,46 +63,54 @@ def add_comment(event, context):
             "CommentedOn": commented_on
         }
 
-        if comment_language == 'ta':  # Tamil language
+        if comment_language == 'ta':  
             translated_comment = translate_text(comment, src='ta', dest='en')
             new_comment["Comment_Tn"] = comment
             new_comment["Comment_En"] = translated_comment
-        else:  # For non-Tamil comments
+        else:  
             new_comment["Comment_En"] = comment
-          
+
         result = player_learning_collection.update_one(
             {'_id': document_id},
             {'$push': {'Comments': new_comment}}
         )
 
         if result.matched_count == 0:
-            return {
-                "statusCode": 404,
-                "body": json.dumps({"error": "No document found with the provided ID."}),
-                "headers": {
-                    "Access-Control-Allow-Origin": "*",
-                    "Content-Type": "application/json"
-                }
-            }
+            return {"error": "No document found with the provided ID."}
 
-        return {
-            "statusCode": 200,
-            "body": json.dumps({"message": "Comment added successfully."}),
-            "headers": {
-                "Access-Control-Allow-Origin": "*",
-                "Content-Type": "application/json"
-            }
-        }
-      
+        return {"message": "Comment added successfully."}
+
     except Exception as e:
+        return {"error": str(e)}
+
+# Lambda function handler
+def lambda_handler(event, context):
+    print("Event received:", event)
+    try:
+        body = event['body']
+        if isinstance(body, str):
+            body = json.loads(body)
+
+        document_id = body.get('document_id')
+        comment = body.get('comment')
+        commented_by = body.get('commented_by')
+        response = add_comment(document_id, comment, commented_by)
         return {
-            "statusCode": 500,
-            "body": json.dumps({"error": str(e)}),
-            "headers": {
-                "Access-Control-Allow-Origin": "*",
-                "Content-Type": "application/json"
+            'statusCode': 200,
+            'body': json.dumps(response),
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type'
             }
         }
-
-def lambda_handler(event, context):
-    return add_comment(event, context)
+    except KeyError as e:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({"error": "Missing key in the event data: {}".format(str(e))}),
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type'
+            }
+        }
