@@ -10,7 +10,6 @@ client = MongoClient(os.environ['MONGODB_URI'])
 db = client['CoachLife']
 player_learning_collection = db['Player Learning']
 
-# Function to add comment to a document in the database
 def add_comment(document_id, comment, commented_by):
     try:
         document_id = ObjectId(document_id)
@@ -32,12 +31,13 @@ def add_comment(document_id, comment, commented_by):
         )
 
         if result.matched_count == 0:
-            return {"error": "No document found with the provided ID."}
+            return {"statusCode": 404, "error": "No document found with the provided ID."}
 
-        return {"message": "Comment added successfully."}
+        return {"statusCode": 200, "message": "Comment added successfully."}
 
     except Exception as e:
-        return {"error": str(e)}
+        return {"statusCode": 500, "error": str(e)}
+
 
 def lambda_handler(event, context):
     print("Event received:", event)
