@@ -3,4 +3,5 @@ langdetect
 googletrans==4.0.0-rc1 
 pytz
 openai
+translate==3.6.1
 
