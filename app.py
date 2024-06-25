@@ -49,10 +49,9 @@ def lambda_handler(event, context):
 
         response = add_comment(document_id, comment, commented_by)
 
-        # Since response is already a dictionary, no need to serialize it again
         return {
-            'statusCode': response['statusCode'],
-            'body': json.dumps(response) if 'error' in response else json.dumps({"message": "Comment added successfully."}),
+            'tatusCode': response['statusCode'],
+            'body': json.dumps({"message": response['message']} if 'essage' in response else {"error": response['error']}),
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
@@ -61,7 +60,7 @@ def lambda_handler(event, context):
         }
     except KeyError as e:
         return {
-            'statusCode': 400,
+            'tatusCode': 400,
             'body': json.dumps({"error": "Missing key in the event data: {}".format(str(e))}),
             'headers': {
                 'Access-Control-Allow-Origin': '*',
@@ -71,7 +70,7 @@ def lambda_handler(event, context):
         }
     except Exception as e:
         return {
-            'statusCode': 500,
+            'tatusCode': 500,
             'body': json.dumps({"error": "Internal server error: {}".format(str(e))}),
             'headers': {
                 'Access-Control-Allow-Origin': '*',
@@ -79,11 +78,6 @@ def lambda_handler(event, context):
                 'Access-Control-Allow-Headers': 'Content-Type'
             }
         }
-
-
-
-
-
 
 
 # import os
