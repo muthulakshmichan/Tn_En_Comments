@@ -41,26 +41,31 @@ def add_comment(document_id, comment, commented_by):
 def lambda_handler(event, context):
     print("Event received:", event)
     try:
+        # Parse the 'body' from the event (assuming 'body' is already a JSON string)
         body = json.loads(event['body'])
 
+        # Extract data from the parsed JSON
         document_id = body.get('document_id')
         comment = body.get('comment')
         commented_by = body.get('commented_by')
 
+        # Call add_comment function with extracted data
         response = add_comment(document_id, comment, commented_by)
 
+        # Prepare response
         return {
-            'tatusCode': response['statusCode'],
-            'body': json.dumps({"message": response['message']} if 'essage' in response else {"error": response['error']}),
+            'statusCode': response['statusCode'],
+            'body': json.dumps({"message": response.get('message'), "error": response.get('error')}),
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type'
             }
         }
+
     except KeyError as e:
         return {
-            'tatusCode': 400,
+            'statusCode': 400,
             'body': json.dumps({"error": "Missing key in the event data: {}".format(str(e))}),
             'headers': {
                 'Access-Control-Allow-Origin': '*',
@@ -68,9 +73,10 @@ def lambda_handler(event, context):
                 'Access-Control-Allow-Headers': 'Content-Type'
             }
         }
+
     except Exception as e:
         return {
-            'tatusCode': 500,
+            'statusCode': 500,
             'body': json.dumps({"error": "Internal server error: {}".format(str(e))}),
             'headers': {
                 'Access-Control-Allow-Origin': '*',
@@ -78,6 +84,7 @@ def lambda_handler(event, context):
                 'Access-Control-Allow-Headers': 'Content-Type'
             }
         }
+
 # import os
 # import json
 # import openai
