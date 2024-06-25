@@ -4,7 +4,6 @@ from bson import ObjectId
 from datetime import datetime
 import pytz
 from pymongo import MongoClient
-from translate import detect_language, translate_text
 
 # MongoDB connection setup
 client = MongoClient(os.environ['MONGODB_URI'])
