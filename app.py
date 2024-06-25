@@ -38,7 +38,6 @@ def add_comment(document_id, comment, commented_by):
     except Exception as e:
         return {"statusCode": 500, "error": str(e)}
 
-
 def lambda_handler(event, context):
     print("Event received:", event)
     try:
@@ -49,12 +48,11 @@ def lambda_handler(event, context):
         commented_by = body.get('commented_by')
 
         response = add_comment(document_id, comment, commented_by)
-        # Serialize the response object to JSON before returning
-        response_json = json.dumps(response)
 
+        # Since response is already a dictionary, no need to serialize it again
         return {
-            'statusCode': 200,
-            'body': response_json,
+            'statusCode': response['statusCode'],
+            'body': json.dumps(response) if 'error' in response else json.dumps({"message": "Comment added successfully."}),
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
@@ -81,7 +79,6 @@ def lambda_handler(event, context):
                 'Access-Control-Allow-Headers': 'Content-Type'
             }
         }
-
 
 
 
