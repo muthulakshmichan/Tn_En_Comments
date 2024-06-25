@@ -20,9 +20,9 @@ def add_comment(document_id, comment, commented_by):
 
         new_comment = {
             "_id": ObjectId(),
-            "commented_by": commented_by,
-            "commentedOn": commented_on,
-            "comment": comment
+            "CommentedBy": commented_by,
+            "CommentedOn": commented_on,
+            "Comment": comment
         }
 
         result = player_learning_collection.update_one(
