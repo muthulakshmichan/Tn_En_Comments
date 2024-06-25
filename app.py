@@ -39,7 +39,6 @@ def add_comment(document_id, comment, commented_by):
     except Exception as e:
         return {"error": str(e)}
 
-# Lambda function handler
 def lambda_handler(event, context):
     print("Event received:", event)
     try:
@@ -50,9 +49,12 @@ def lambda_handler(event, context):
         commented_by = body.get('commented_by')
 
         response = add_comment(document_id, comment, commented_by)
+        # Serialize the response object to JSON before returning
+        response_json = json.dumps(response)
+
         return {
             'statusCode': 200,
-            'body': json.dumps(response),
+            'body': response_json,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
@@ -79,7 +81,6 @@ def lambda_handler(event, context):
                 'Access-Control-Allow-Headers': 'Content-Type'
             }
         }
-
 
 
 
