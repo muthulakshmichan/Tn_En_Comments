@@ -41,8 +41,11 @@ def add_comment(document_id, comment, commented_by):
 def lambda_handler(event, context):
     print("Event received:", event)
     try:
-        # Parse the 'body' from the event (assuming 'body' is already a JSON string)
-        body = json.loads(event['body'])
+        # Parse the 'body' from the event
+        if isinstance(event['body'], str):
+            body = json.loads(event['body'])
+        else:
+            body = event['body']
 
         # Extract data from the parsed JSON
         document_id = body.get('document_id')
