@@ -50,8 +50,8 @@ def lambda_handler(event, context):
         response = add_comment(document_id, comment, commented_by)
 
         return {
-            'statusCode': response['statusCode'],
-            'body': {"message": response['message']} if 'message' in response else {"error": response['error']},
+            'tatusCode': response['statusCode'],
+            'body': json.dumps({"message": response['message']} if 'essage' in response else {"error": response['error']}),
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
@@ -60,8 +60,8 @@ def lambda_handler(event, context):
         }
     except KeyError as e:
         return {
-            'statusCode': 400,
-            'body': {"error": "Missing key in the event data: {}".format(str(e))},
+            'tatusCode': 400,
+            'body': json.dumps({"error": "Missing key in the event data: {}".format(str(e))}),
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
@@ -70,8 +70,8 @@ def lambda_handler(event, context):
         }
     except Exception as e:
         return {
-            'statusCode': 500,
-            'body': {"error": "Internal server error: {}".format(str(e))},
+            'tatusCode': 500,
+            'body': json.dumps({"error": "Internal server error: {}".format(str(e))}),
             'headers': {
                 'Access-Control-Allow-Origin': '*',
                 'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
