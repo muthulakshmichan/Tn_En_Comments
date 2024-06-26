@@ -50,7 +50,11 @@ def add_comment(document_id, comment, commented_by):
 def lambda_handler(event, context):
     print("Event received:", event)
     try:
-        body = json.loads(event['body'])
+        body = event['body']
+        if isinstance(body, dict):
+            body = json.dumps(body)  # Ensure body is a JSON string
+
+        body = json.loads(body)  # Parse the JSON string into a dictionary
         document_id = body.get('document_id')
         comment = body.get('comment')
         commented_by = body.get('commented_by')
