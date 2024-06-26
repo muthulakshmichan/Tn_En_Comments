@@ -4,39 +4,16 @@ from bson import ObjectId
 from datetime import datetime
 import pytz
 from pymongo import MongoClient
-import openai
-
-# Set up the OpenAI API key
-openai.api_key = os.environ['OPENAI_API_KEY']
 
 # MongoDB connection setup
 client = MongoClient(os.environ['MONGODB_URI'])
 db = client['CoachLife']
 player_learning_collection = db['Player Learning']
 
-# Function to detect language using OpenAI API
-def detect_language(text):
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4-turbo",
-            messages=[
-                {"role": "system", "content": "You are a language detection assistant."},
-                {"role": "user", "content": f"Detect the language of the following text: {text}"}
-            ],
-            max_tokens=50,
-            temperature=0
-        )
-        language = response['choices'][0]['message']['content'].strip().lower()
-        return language
-    except Exception as e:
-        print(f"Language detection error: {e}")
-        return 'unknown'
-
 # Function to add comment to a document in the database
-def add_comment(document_id, comment, commented_by):
+def add_comment(document_id, comment_en, comment_tn, commented_by):
     try:
         document_id = ObjectId(document_id)
-        comment_language = detect_language(comment)
         now_utc = datetime.now(pytz.UTC)
 
         ist = pytz.timezone('Asia/Kolkata')
@@ -48,15 +25,10 @@ def add_comment(document_id, comment, commented_by):
             "CommentedOn": commented_on
         }
 
-        if 'tamil' in comment_language and 'english' in comment_language:
-            # Assuming the user input format: "Tamil Comment. English Comment."
-            tamil_comment, english_comment = comment.split(". ")
-            new_comment["Comment_Tn"] = tamil_comment.strip()
-            new_comment["Comment_En"] = english_comment.strip()
-        elif 'tamil' in comment_language:  
-            new_comment["Comment_Tn"] = comment
-        else:  
-            new_comment["Comment_En"] = comment
+        if comment_tn:  # If Tamil comment is provided
+            new_comment["Comment_Tn"] = comment_tn
+        if comment_en:  # If English comment is provided
+            new_comment["Comment_En"] = comment_en
 
         result = player_learning_collection.update_one(
             {'_id': document_id},
@@ -81,13 +53,25 @@ def lambda_handler(event, context):
 
         body = json.loads(body)  # Parse the JSON string into a dictionary
         document_id = body.get('document_id')
-        comment = body.get('comment')
+        comment_en = body.get('comment_en', "")  # Default to empty string if not provided
+        comment_tn = body.get('comment_tn', "")  # Default to empty string if not provided
         commented_by = body.get('commented_by')
         
-        if not document_id or not comment or not commented_by:
+        if not document_id or not commented_by:
             return {
                 'statusCode': 400,
-                'body': json.dumps({"error": "document_id, comment, and commented_by are required fields."}),
+                'body': json.dumps({"error": "document_id and commented_by are required fields."}),
+                'headers': {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+                    'Access-Control-Allow-Headers': 'Content-Type'
+                }
+            }
+
+        if not comment_en and not comment_tn:
+            return {
+                'statusCode': 400,
+                'body': json.dumps({"error": "At least one of comment_en or comment_tn must be provided."}),
                 'headers': {
                     'Access-Control-Allow-Origin': '*',
                     'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
@@ -95,7 +79,7 @@ def lambda_handler(event, context):
                 }
             }
         
-        response = add_comment(document_id, comment, commented_by)
+        response = add_comment(document_id, comment_en, comment_tn, commented_by)
         return {
             'statusCode': 200,
             'body': json.dumps(response),
