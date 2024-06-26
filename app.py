@@ -4,18 +4,32 @@ from bson import ObjectId
 from datetime import datetime
 import pytz
 from pymongo import MongoClient
-from langdetect import detect
+import openai
+
+# Set up the OpenAI API key
+openai.api_key = os.environ['OPENAI_API_KEY']
 
 # MongoDB connection setup
 client = MongoClient(os.environ['MONGODB_URI'])
 db = client['CoachLife']
 player_learning_collection = db['Player Learning']
 
-# Function to detect language of the text
+# Function to detect language using OpenAI API
 def detect_language(text):
     try:
-        return detect(text)
-    except:
+        response = openai.ChatCompletion.create(
+            model="gpt-4-turbo",
+            messages=[
+                {"role": "system", "content": "You are a language detection assistant."},
+                {"role": "user", "content": f"Detect the language of the following text: {text}"}
+            ],
+            max_tokens=50,
+            temperature=0
+        )
+        language = response['choices'][0]['message']['content'].strip().lower()
+        return language
+    except Exception as e:
+        print(f"Language detection error: {e}")
         return 'unknown'
 
 # Function to add comment to a document in the database
@@ -34,7 +48,12 @@ def add_comment(document_id, comment, commented_by):
             "CommentedOn": commented_on
         }
 
-        if comment_language == 'ta':  
+        if 'tamil' in comment_language and 'english' in comment_language:
+            # Assuming the user input format: "Tamil Comment. English Comment."
+            tamil_comment, english_comment = comment.split(". ")
+            new_comment["Comment_Tn"] = tamil_comment.strip()
+            new_comment["Comment_En"] = english_comment.strip()
+        elif 'tamil' in comment_language:  
             new_comment["Comment_Tn"] = comment
         else:  
             new_comment["Comment_En"] = comment
