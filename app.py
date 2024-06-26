@@ -4,7 +4,7 @@ from bson import ObjectId
 from datetime import datetime
 import pytz
 from pymongo import MongoClient
-from translate import detect_language, translate_text
+from translate import detect_language
 
 # MongoDB connection setup
 client = MongoClient(os.environ['MONGODB_URI'])
@@ -24,15 +24,14 @@ def add_comment(document_id, comment, commented_by):
         new_comment = {
             "_id": ObjectId(),
             "CommentedBy": commented_by,
-            "CommentedOn": commented_on
+            "CommentedOn": commented_on,
+            "Comment": comment  # Store the original comment
         }
 
         if comment_language == 'ta':  
-            translated_comment = translate_text(comment, src='ta', dest='en')
-            new_comment["Comment_Tn"] = comment
-            new_comment["Comment_En"] = translated_comment
+            new_comment["Comment_Tn"] = comment  # Store Tamil comment in Comment_TN
         else:  
-            new_comment["Comment_En"] = comment
+            new_comment["Comment_En"] = comment  # Store English comment in Comment_EN
 
         result = player_learning_collection.update_one(
             {'_id': document_id},
